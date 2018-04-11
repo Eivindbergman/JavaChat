@@ -4,14 +4,21 @@ import javax.crypto.Cipher;
 import java.security.*;
 
 /**
- * Created by beej15 on on 2/23/18
+ *
+ *
+ * @author beej15
+ * Created on 4/11/18
  */
 public class PubKey {
-    public static Cipher cipher;
+    private static Cipher cipher;
 
-    public static Key[] keys;
-    public static Key publicKey;
-    public static Key privateKey;
+    private static Key[] keys;
+    private static Key publicKey;
+    private static Key privateKey;
+    // TODO
+    public PubKey() {
+
+    }
 
     public static void genKeys() {
         keys = genKey();
@@ -19,7 +26,7 @@ public class PubKey {
         privateKey = keys[1];
     }
 
-    public static Key[] genKey()  {
+    private static Key[] genKey()  {
 
         Key[] keyArray = new Key[2];
         try {
@@ -39,13 +46,13 @@ public class PubKey {
         return keyArray;
     }
 
-    public static void crypt(String message, int iterations) throws Exception {
+    private static void crypt(String message, int iterations) throws Exception {
         String decrypted = "";
         byte[] encrypted = encrypt(message, publicKey);
         decrypted = decrypt(encrypted, privateKey);
     }
 
-    public static byte[] encrypt(String message, Key publicKey) throws Exception {
+    private static byte[] encrypt(String message, Key publicKey) throws Exception {
         cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] ciphertext = cipher.doFinal(message.getBytes("UTF-8"));
@@ -59,5 +66,13 @@ public class PubKey {
         byte[] text = cipher.doFinal(ciphertext);
 
         return new String(text);
+    }
+
+    public static Key getPrivateKey() {
+        return privateKey;
+    }
+
+    public static Key getPublicKey() {
+        return publicKey;
     }
 }

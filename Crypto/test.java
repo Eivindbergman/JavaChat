@@ -6,7 +6,10 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Created by beej15 on on 2/23/18
+ *
+ *
+ * @author beej15
+ * Created on 4/11/18
  */
 public class test {
 
@@ -14,6 +17,7 @@ public class test {
 
     public static void main(String[] args) {
 
+        // TODO
         PubKey.genKeys();
         String message = "Eivind";
         try {
@@ -49,7 +53,7 @@ public class test {
 
     private static byte[] encryptSecretKey(byte[] data) throws Exception {
         cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, PubKey.publicKey);
+        cipher.init(Cipher.ENCRYPT_MODE, PubKey.getPublicKey());
         key = cipher.doFinal(data);
         //key = cipher.doFinal(secretKey.getEncoded());
         return key;
@@ -57,7 +61,7 @@ public class test {
 
     private static byte[] decryptSecretKey(byte[] data) throws Exception {
         cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, PubKey.privateKey);
+        cipher.init(Cipher.DECRYPT_MODE, PubKey.getPrivateKey());
         key = cipher.doFinal(data);
         return key;
     }

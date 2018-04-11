@@ -6,15 +6,19 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Created by beej15 on on 2/23/18
+ *
+ *
+ * @author beej15
+ * Created on 4/11/18
  */
 public class SecretKey {
-    public String ENCRYTPION_ALGORITHM = "AES";
+    private final String ENCRYTPION_ALGORITHM = "AES";
 
     private Cipher       cipher         = null;
     private Key          secretKey      = null;
     private KeyGenerator keyGenerator   = null;
 
+    // TODO
     public SecretKey() {
         try {
             keyGenerator = KeyGenerator.getInstance(this.ENCRYTPION_ALGORITHM);

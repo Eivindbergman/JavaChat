@@ -1,70 +1,81 @@
 package ChatClient;
 
-import java.io.*;
+import javax.crypto.ShortBufferException;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
+import java.security.InvalidKeyException;
 
 /**
- * Created by beej15 on on 2/21/18
+ * Client for Instant Messaging application.
+ *
+ * @author beej15
+ * Created on 4/11/18
  */
 public class Client {
-    private String serverip;
-    private String ip = "localhost";
-    private int port;
+    private     String      ip;
+    private     int         port;
+    private     DHKeyGen    dhKeyGen;
+    private     String      DHSecret;
 
+    /**
+     * Creates the client object which is used to communicate with the server.
+     * @param ip IP-address of the server
+     * @param port used network port on the server
+     */
     public Client(String ip, int port) {
-        this.serverip = ip;
+        this.ip = ip;
         this.port = port;
     }
 
+    /**
+     * Establish connection and a shared secret with the server.
+     */
     public void startClient() {
-        Socket socket = null;
         try {
-            socket = new Socket(ip, port);
-            WriteHandler writeHandler = new WriteHandler(socket);
-            writeHandler.startThread();
-        } catch (Exception e) {
-            System.out.println("Failed");
-            System.exit(0);
+            establishSharedKey();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } catch (KeyGenException kge) {
+            kge.getMessage();
+        } finally {
+            System.out.println("Success");
         }
+    }
 
-        try {
-            while (true) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                String line;
-                while((line = in.readLine()) != null) {
-                    System.out.println("SERVER - " + line);
-                }
+    private void establishSharedKey() throws KeyGenException, IOException {
+        byte[] message;
+        byte[] tosend;
+        int length;
+
+        Socket socket = new Socket(ip, port);
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+        length = in.readInt();
+        if (length > 0) {
+            message = new byte[length];
+            in.readFully(message, 0, message.length);
+
+            dhKeyGen = new DHKeyGen(message);
+            try {
+                dhKeyGen.doPhase();
+            } catch (InvalidKeyException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-    }
-}
 
-class WriteHandler extends Thread {
-    private Thread t;
-    private Socket socket;
-    WriteHandler(Socket socket) {
-        this.socket = socket;
-    }
+        tosend = dhKeyGen.getBobPubKeyEnc();
+        out.writeInt(tosend.length);
+        out.write(tosend);
 
-    @Override
-    public void run() {
         try {
-            String message = "Hej Från Client!";
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            out.println(message);
-            out.flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+            this.DHSecret = dhKeyGen.getSecretHex(in.readInt());
+            System.out.println(this.DHSecret);
 
-    public void startThread () {
-        if (t == null) {
-            System.out.println("Starting... ");
-            t = new Thread (this);
-            t.start ();
+        } catch (ShortBufferException e) {
+            e.printStackTrace();
         }
     }
 }
