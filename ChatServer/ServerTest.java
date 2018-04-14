@@ -9,7 +9,7 @@ package ChatServer;
 public class ServerTest {
     public static void main(String[] args) {
         Server server = new Server(1234);
-        System.out.println("Starting chatserver...");
+        //System.out.println("Starting chatserver...");
         server.startServer();
     }
 }

@@ -4,6 +4,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 /**
  *
@@ -17,6 +18,7 @@ public class SecretKey {
     private Cipher       cipher         = null;
     private Key          secretKey      = null;
     private KeyGenerator keyGenerator   = null;
+    public static byte[] iv = new SecureRandom().generateSeed(16);
 
     // TODO
     public SecretKey() {

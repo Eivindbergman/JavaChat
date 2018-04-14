@@ -52,7 +52,7 @@ public class test {
     }
 
     private static byte[] encryptSecretKey(byte[] data) throws Exception {
-        cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher = Cipher.getInstance("Signature/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, PubKey.getPublicKey());
         key = cipher.doFinal(data);
         //key = cipher.doFinal(secretKey.getEncoded());
@@ -60,7 +60,7 @@ public class test {
     }
 
     private static byte[] decryptSecretKey(byte[] data) throws Exception {
-        cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher = Cipher.getInstance("Signature/ECB/PKCS1Padding");
         cipher.init(Cipher.DECRYPT_MODE, PubKey.getPrivateKey());
         key = cipher.doFinal(data);
         return key;

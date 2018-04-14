@@ -1,5 +1,6 @@
 package ChatServer;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -57,7 +58,7 @@ public class Server extends Thread {
                     RequestHandler requestHandler = new RequestHandler(socket);
                     requestHandler.startThread();
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }

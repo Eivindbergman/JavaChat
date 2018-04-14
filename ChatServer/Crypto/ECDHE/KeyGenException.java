@@ -1,7 +1,7 @@
-package ChatClient;
+package ChatServer.Crypto.ECDHE;
 
 /**
- * Exception for everything related to the key generation.
+ * Description...
  *
  * @author beej15
  * Created on 4/11/18

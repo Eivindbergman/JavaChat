@@ -30,7 +30,7 @@ public class PubKey {
 
         Key[] keyArray = new Key[2];
         try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("Signature");
             keyPairGenerator.initialize(2048);
 
             KeyPair keyPair = keyPairGenerator.genKeyPair();
@@ -53,7 +53,7 @@ public class PubKey {
     }
 
     private static byte[] encrypt(String message, Key publicKey) throws Exception {
-        cipher = Cipher.getInstance("RSA");
+        cipher = Cipher.getInstance("Signature");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] ciphertext = cipher.doFinal(message.getBytes("UTF-8"));
 
@@ -61,7 +61,7 @@ public class PubKey {
     }
 
     public static String decrypt(byte[] ciphertext, Key privateKey) throws Exception {
-        cipher = Cipher.getInstance("RSA");
+        cipher = Cipher.getInstance("Signature");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
         byte[] text = cipher.doFinal(ciphertext);
 

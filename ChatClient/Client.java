@@ -1,11 +1,10 @@
 package ChatClient;
 
-import javax.crypto.ShortBufferException;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import ChatClient.Crypto.AES.AESSecretKey;
+import ChatClient.Crypto.ECDHE.DHKeyGen;
+
+import java.io.*;
 import java.net.Socket;
-import java.security.InvalidKeyException;
 
 /**
  * Client for Instant Messaging application.
@@ -16,8 +15,7 @@ import java.security.InvalidKeyException;
 public class Client {
     private     String      ip;
     private     int         port;
-    private     DHKeyGen    dhKeyGen;
-    private     String      DHSecret;
+    private DHKeyGen dhKeyGen;
 
     /**
      * Creates the client object which is used to communicate with the server.
@@ -27,54 +25,41 @@ public class Client {
     public Client(String ip, int port) {
         this.ip = ip;
         this.port = port;
+        this.dhKeyGen = new DHKeyGen();
     }
 
     /**
      * Establish connection and a shared secret with the server.
      */
     public void startClient() {
-        try {
-            establishSharedKey();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } catch (KeyGenException kge) {
-            kge.getMessage();
-        } finally {
-            System.out.println("Success");
-        }
+        establishSharedKey();
     }
 
-    private void establishSharedKey() throws KeyGenException, IOException {
-        byte[] message;
-        byte[] tosend;
+    private void establishSharedKey() {
+        Socket socket;
         int length;
-
-        Socket socket = new Socket(ip, port);
-        DataInputStream in = new DataInputStream(socket.getInputStream());
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-        length = in.readInt();
-        if (length > 0) {
-            message = new byte[length];
-            in.readFully(message, 0, message.length);
-
-            dhKeyGen = new DHKeyGen(message);
-            try {
-                dhKeyGen.doPhase();
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
-            }
-        }
-
-        tosend = dhKeyGen.getBobPubKeyEnc();
-        out.writeInt(tosend.length);
-        out.write(tosend);
-
+        byte[] pubKeyBytes;
         try {
-            this.DHSecret = dhKeyGen.getSecretHex(in.readInt());
-            System.out.println(this.DHSecret);
+            socket = new Socket(ip, port);
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        } catch (ShortBufferException e) {
+            length = in.readInt();
+            if (length > 0) {
+                pubKeyBytes = new byte[length];
+                in.readFully(pubKeyBytes, 0, pubKeyBytes.length);
+                dhKeyGen.generateSecret(pubKeyBytes);
+            }
+
+            out.writeInt(dhKeyGen.getPublicKey().length);
+            out.write(dhKeyGen.getPublicKey());
+
+            System.out.println(new String(dhKeyGen.getSecret()));
+            System.out.println(dhKeyGen.getSecret().length);
+
+            AESSecretKey aesSecretKey = new AESSecretKey(dhKeyGen.getSecret());
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
