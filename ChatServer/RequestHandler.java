@@ -1,8 +1,6 @@
 package ChatServer;
 
-import ChatClient.Crypto.AES.AESSecretKey;
-import ChatServer.Crypto.ECDHE.DHKeyGen;
-
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.Socket;
 
@@ -15,16 +13,24 @@ import java.net.Socket;
 public class RequestHandler extends Thread {
     private Thread      t;
     private String      threadName = "Thread_" + (java.lang.Thread.activeCount());
-    private Socket      socket;
-    private DHKeyGen dhKeyGen;
+    private Socket      aliceSocket;
+    private Socket      bobSocket;
+    DataInputStream     aliceIn;
+    DataOutputStream    aliceOut;
+    DataInputStream     bobIn;
+    DataOutputStream    bobOut;
 
-    /**
-     * Instatiate the RequestHandler object.
-     * @param socket Socket to be handled by the RequestHandler.
-     */
-    RequestHandler(Socket socket) {
-        this.socket = socket;
-        this.dhKeyGen = new DHKeyGen();
+            /**
+             * Instatiate the RequestHandler object.
+             */
+    RequestHandler() {}
+
+    public void setAliceSocket(Socket aliceSocket) {
+        this.aliceSocket = aliceSocket;
+    }
+
+    public void setBobSocket(Socket bobSocket) {
+        this.bobSocket = bobSocket;
     }
 
     /**
@@ -33,31 +39,97 @@ public class RequestHandler extends Thread {
      */
     @Override
     public void run() {
-        int length;
-        byte[] pubKeyBytes;
         try {
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            aliceIn     = new DataInputStream(aliceSocket.getInputStream());
+            aliceOut    = new DataOutputStream(aliceSocket.getOutputStream());
+            bobIn       = new DataInputStream(bobSocket.getInputStream());
+            bobOut      = new DataOutputStream(bobSocket.getOutputStream());
+            establishSharedSecret(aliceIn, aliceOut, bobIn, bobOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            out.writeInt(dhKeyGen.getPublicKey().length);
-            out.write(dhKeyGen.getPublicKey());
-
-            length = in.readInt();
-            if (length > 0) {
-                pubKeyBytes = new byte[length];
-                in.readFully(pubKeyBytes, 0, pubKeyBytes.length);
-                dhKeyGen.generateSecret(pubKeyBytes);
+        int i = 0;
+        while (true) {
+            byte[] message;
+            int aliceLen, bobLen;
+            try {
+                if (i == 0) {
+                    aliceLen    = aliceIn.readInt();
+                    if (aliceLen > 0) {
+                        message = new byte[aliceLen];
+                        aliceIn.readFully(message, 0, message.length);
+                        bobOut.writeInt(message.length);
+                        bobOut.write(message);
+                        bobOut.flush();
+                        i++;
+                    }
+                } else {
+                    bobLen      = bobIn.readInt();
+                    if (bobLen > 0) {
+                        message = new byte[bobLen];
+                        bobIn.readFully(message, 0, message.length);
+                        aliceOut.writeInt(message.length);
+                        aliceOut.write(message);
+                        aliceOut.flush();
+                        i--;
+                    }
+                }
+            } catch (EOFException e) {
+                System.exit(1);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-            System.out.println(new String(dhKeyGen.getSecret()));
-            System.out.println(dhKeyGen.getSecret().length);
+        }
 
-            AESSecretKey aesSecretKey = new AESSecretKey(dhKeyGen.getSecret());
+    }
+
+    private void establishSharedSecret(DataInputStream aliceIn, DataOutputStream aliceOut, DataInputStream bobIn, DataOutputStream bobOut) {
+        int aliceLen, bobLen;
+        byte[] alicePubKey,
+                bobPubKey;
+        try {
+
+            byte[] alice = "Alice".getBytes();
+            aliceOut.writeInt(alice.length);
+            aliceOut.write(alice);
+
+            byte[] bob = "Bob".getBytes();
+            bobOut.writeInt(bob.length);
+            bobOut.write(bob);
+
+            //aliceOut.writeInt(dhKeyGen.getPublicKey().length);
+            //aliceOut.write(dhKeyGen.getPublicKey());
+
+            // Reading alice's public key.
+            aliceLen = aliceIn.readInt();
+            bobLen = bobIn.readInt();
+            if (aliceLen > 0 && bobLen > 0) {
+                alicePubKey = new byte[aliceLen];
+                aliceIn.readFully(alicePubKey, 0, alicePubKey.length);
+                //System.out.println("Alice's pub key: " + new String(alicePubKey));
+                bobOut.writeInt(alicePubKey.length);
+                bobOut.write(alicePubKey);
+
+                bobPubKey = new byte[bobLen];
+                bobIn.readFully(bobPubKey, 0, bobPubKey.length);
+                //System.out.println("Bob's pub key: " + new String(bobPubKey));
+                aliceOut.writeInt(bobPubKey.length);
+                aliceOut.write(bobPubKey);
+            }
+
+            aliceOut.flush();
+            bobOut.flush();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Start the thread given to serve the communication with individual client
+     */
     public void startThread () {
         if (t == null) {
             t = new Thread (this, threadName);

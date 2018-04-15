@@ -1,8 +1,11 @@
 package ChatClient.Crypto.AES;
 
+import ChatClient.Crypto.ECDHE.DHKeyGen;
 import ChatClient.Crypto.HKDF.HKDF;
-import Crypto.SecretKey;
-import java.security.spec.KeySpec;
+
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Description...
@@ -11,10 +14,10 @@ import java.security.spec.KeySpec;
  * Created on 4/14/18
  */
 public class AESSecretKey {
-    private         byte[]      seed;
-    private         KeySpec     keySpec;
-    private         SecretKey   secretKey;
-    private final   String      instance    = "SHA-256";
+    private         byte[]          seed;
+    private         SecretKey       secretKey;
+    private final   String          algorithm   = "AES";
+    private         HKDF            hkdf;
 
     public AESSecretKey(byte[] seed) {
         this.seed = seed;
@@ -22,10 +25,25 @@ public class AESSecretKey {
     }
 
     private void generateKey() {
-        HKDF hkdf = new HKDF();
-        byte[] temp = hkdf.deriveSecret(seed, "qäkqopkäcqockwåofkvweqkcåowkepowkecpowekc".getBytes(), 32);
-        System.out.println("OKM: " + new String(temp));
-        System.out.println(temp.length);
+        hkdf = new HKDF();
+        System.out.println("SEED: " + new String(seed));
+        byte[] OKM = hkdf.deriveSecret(seed, "".getBytes(), 32);
+        //System.out.println("OKM KEY: " + new String(OKM));
+        //System.out.println("OKM KEY HEX: " + new String(new DHKeyGen().bytesToHex(OKM)));
+        //System.out.println(OKM.length);
+
+        try {
+            SecretKeySpec keySpec = new SecretKeySpec(OKM, algorithm);
+            SecretKeyFactory kf = SecretKeyFactory.getInstance(algorithm);
+            secretKey = kf.generateSecret(keySpec);
+            System.out.println("SEC KEY: " + new String(secretKey.getEncoded()));
+            //System.out.println("SEC KEY HEX: " + new String(new DHKeyGen().bytesToHex(secretKey.getEncoded())));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
+    public SecretKey getSecretKey() {
+        return secretKey;
+    }
 }

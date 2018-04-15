@@ -1,66 +1,70 @@
 package ChatClient;
 
-import ChatClient.Crypto.AES.AESSecretKey;
-import ChatClient.Crypto.ECDHE.DHKeyGen;
+import ChatClient.GUI.View;
 
-import java.io.*;
-import java.net.Socket;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
 
 /**
- * Client for Instant Messaging application.
+ * Main controller for Instant Messaging client.
  *
  * @author beej15
  * Created on 4/11/18
  */
 public class Client {
-    private     String      ip;
-    private     int         port;
-    private DHKeyGen dhKeyGen;
+    private     String              ip;
+    private     int                 port;
+    private     ClientModel         model;
+    private     View                view;
 
     /**
-     * Creates the client object which is used to communicate with the server.
+     * Creates the client object which is used to communicate with the server through the model.
      * @param ip IP-address of the server
      * @param port used network port on the server
      */
     public Client(String ip, int port) {
-        this.ip = ip;
-        this.port = port;
-        this.dhKeyGen = new DHKeyGen();
-    }
-
-    /**
-     * Establish connection and a shared secret with the server.
-     */
-    public void startClient() {
-        establishSharedKey();
-    }
-
-    private void establishSharedKey() {
-        Socket socket;
-        int length;
-        byte[] pubKeyBytes;
-        try {
-            socket = new Socket(ip, port);
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-            length = in.readInt();
-            if (length > 0) {
-                pubKeyBytes = new byte[length];
-                in.readFully(pubKeyBytes, 0, pubKeyBytes.length);
-                dhKeyGen.generateSecret(pubKeyBytes);
+        this.model = new ClientModel(ip, port);
+        this.view = new View(model.getClientName());
+        ChatHandler chatHandler = new ChatHandler(view);
+        view.addChatListener(new ChatListener());
+        if (model.isKeyEstablished()) {
+            System.out.println("Starting chatHandler");
+            chatHandler.setInputStream(model.getIn());
+            chatHandler.startThread();
+        } else {
+            for (int i = 0; i < 10; i++) {
+                if (model.isKeyEstablished()) {
+                    chatHandler.setInputStream(model.getIn());
+                    chatHandler.startThread();
+                    break;
+                }
+                try {
+                    Thread.sleep(2000L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+        }
+    }
 
-            out.writeInt(dhKeyGen.getPublicKey().length);
-            out.write(dhKeyGen.getPublicKey());
-
-            System.out.println(new String(dhKeyGen.getSecret()));
-            System.out.println(dhKeyGen.getSecret().length);
-
-            AESSecretKey aesSecretKey = new AESSecretKey(dhKeyGen.getSecret());
-
-        } catch (Exception e) {
+    private void sendMessage(String m) {
+        try {
+            model.sendMessage(m);
+        } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private class ChatListener implements ActionListener {
+        String message;
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource().equals(view.textField)) {
+                message = view.textField.getText();
+                view.showMessage("\n" + model.getClientName() + ": " + message);
+                sendMessage(message);
+                view.textField.setText("");
+            }
         }
     }
 }
