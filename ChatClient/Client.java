@@ -1,10 +1,14 @@
 package ChatClient;
 
+import ChatClient.Crypto.AES.MasterCipher;
+import ChatClient.Crypto.AES.MasterSecret;
 import ChatClient.GUI.View;
+import Crypto.SecretKey;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.security.KeyException;
 
 /**
  * Main controller for Instant Messaging client.
@@ -26,7 +30,7 @@ public class Client {
     public Client(String ip, int port) {
         this.model = new ClientModel(ip, port);
         this.view = new View(model.getClientName());
-        ChatHandler chatHandler = new ChatHandler(view);
+        ChatHandler chatHandler = new ChatHandler(view, model.getMasterCipher());
         view.addChatListener(new ChatListener());
         if (model.isKeyEstablished()) {
             System.out.println("Starting chatHandler");
@@ -61,7 +65,7 @@ public class Client {
         public void actionPerformed(ActionEvent e) {
             if (e.getSource().equals(view.textField)) {
                 message = view.textField.getText();
-                view.showMessage("\n" + model.getClientName() + ": " + message);
+                view.showMessage(String.format("\n[%s]: %s", model.getClientName(), message));
                 sendMessage(message);
                 view.textField.setText("");
             }

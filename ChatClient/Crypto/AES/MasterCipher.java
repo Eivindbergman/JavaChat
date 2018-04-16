@@ -1,11 +1,10 @@
 package ChatClient.Crypto.AES;
 
-import org.bouncycastle.util.encoders.Base64;
-
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.util.Base64;
 
 /**
  * Description...
@@ -33,35 +32,32 @@ public class MasterCipher {
     }
 
     public byte[] encrypt(String plainText) {
-        byte[] cipherText = null;
         try {
-            //cipherText = encryptBytes(encode(plainText.getBytes()));
-            cipherText = encryptBytes(plainText.getBytes());
+            byte[] cipherText = encryptBytes(plainText.getBytes());
+            return encode(cipherText);
+            //cipherText = encryptBytes(plainText.getBytes());
         } catch (BadCipherParametersException e) {
             e.getMessage();
             System.exit(1);
         }
-        return cipherText;
+        return null;
     }
 
     public String decrypt(byte[] cipherText) {
-        String plainText = null;
         try {
-            //plainText = new String(decryptBytes(decode(cipherText)));
-            plainText = new String(decryptBytes(cipherText));
+            byte[] plainText = decode(cipherText);
+            return new String(decryptBytes(plainText));
         } catch (BadCipherParametersException e) {
             e.getMessage();
             System.exit(1);
         }
-        return plainText;
+        return null;
     }
 
     private byte[] encryptBytes(byte[] plaintext) throws BadCipherParametersException {
         try {
-            Cipher  cipher      = getEncryptionCipher(masterSecret.getSecretKey());
-            byte[]  encrypted   = getEncryptedBodyWithIV(cipher, plaintext);
-
-            return encrypted;
+            Cipher cipher = getEncryptionCipher(masterSecret.getSecretKey());
+            return getEncryptedBodyWithIV(cipher, plaintext);
 
         } catch (InvalidKeyException e) {
             e.printStackTrace();
@@ -77,10 +73,8 @@ public class MasterCipher {
 
     private byte[] decryptBytes(byte[] ciphertext) throws BadCipherParametersException {
         try {
-            Cipher      cipher      = getDecryptionCipher(masterSecret.getSecretKey(), ciphertext);
-            byte[]      plainText   = getDecryptedIVandBody(cipher, ciphertext);
-
-            return plainText;
+            Cipher cipher = getDecryptionCipher(masterSecret.getSecretKey(), ciphertext);
+            return getDecryptedBodyAndIV(cipher, ciphertext);
 
         } catch (InvalidKeyException e) {
             e.printStackTrace();
@@ -98,11 +92,12 @@ public class MasterCipher {
     }
 
     private byte[] encode(byte[] text) {
-        return Base64.encode(text);
+        return Base64.getEncoder().encode(text);
+
     }
 
     private byte[] decode(byte[] encodedBody) {
-        return Base64.decode(encodedBody);
+        return Base64.getDecoder().decode(encodedBody);
     }
 
     private byte[] getEncryptedBodyWithIV(Cipher cipher, byte[] encrypted) throws IllegalBlockSizeException, BadPaddingException {
@@ -115,7 +110,7 @@ public class MasterCipher {
         return encryptedBody;
     }
 
-    private byte[] getDecryptedIVandBody(Cipher cipher, byte[] cipherText) throws IllegalBlockSizeException, BadPaddingException {
+    private byte[] getDecryptedBodyAndIV(Cipher cipher, byte[] cipherText) throws IllegalBlockSizeException, BadPaddingException {
         return cipher.doFinal(cipherText, cipher.getBlockSize(), cipherText.length - cipher.getBlockSize());
     }
 

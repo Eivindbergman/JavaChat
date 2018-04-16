@@ -1,6 +1,5 @@
 package ChatClient.tests;
 
-import ChatClient.Crypto.AES.AESSecretKey;
 import ChatClient.Crypto.AES.MasterCipher;
 import ChatClient.Crypto.AES.MasterSecret;
 import ChatClient.Crypto.ECDHE.DHKeyGen;
@@ -23,16 +22,14 @@ public class crypto {
 
         byte[] secret = dhKeyGen1.getSecret();
 
-        AESSecretKey aesSecretKey = new AESSecretKey(secret);
-        MasterSecret masterSecret = new MasterSecret(aesSecretKey.getSecretKey());
+        MasterSecret masterSecret = new MasterSecret(secret);
         MasterCipher masterCipher = new MasterCipher(masterSecret);
 
-        byte[] enc = masterCipher.encrypt("Hej jag heter eivind");
+        byte[] enc = masterCipher.encrypt("This is a message");
 
         secret = dhKeyGen2.getSecret();
 
-        AESSecretKey aesSecretKey1 = new AESSecretKey(secret);
-        MasterSecret masterSecret1 = new MasterSecret(aesSecretKey1.getSecretKey());
+        MasterSecret masterSecret1 = new MasterSecret(secret);
         MasterCipher masterCipher1 = new MasterCipher(masterSecret1);
 
         String dec = masterCipher1.decrypt(enc);

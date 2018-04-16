@@ -1,13 +1,17 @@
 package ChatClient;
 
-import ChatClient.Crypto.AES.AESSecretKey;
+import ChatClient.Crypto.AES.MasterCipher;
+import ChatClient.Crypto.AES.MasterSecret;
 import ChatClient.Crypto.ECDHE.DHKeyGen;
+import ChatClient.Crypto.ECDHE.KeyGenException;
 
 import javax.crypto.SecretKey;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyException;
 
 /**
  * Description...
@@ -19,20 +23,23 @@ public class ClientModel {
     private     String              ip;
     private     int                 port;
     private     String              clientName;
-    private     AESSecretKey        aesSecretKey;
+    private     MasterSecret        masterSecret;
+    private     MasterCipher        masterCipher;
     private     DHKeyGen            dhKeyGen;
     private     boolean             keyEstablished = false;
     private     DataInputStream     in  = null;
     private     DataOutputStream    out = null;
 
     public ClientModel(String ip, int port) {
-        this.ip = ip;
-        this.port = port;
-        this.dhKeyGen = new DHKeyGen();
-        establishSharedKey();
+        this.ip         = ip;
+        this.port       = port;
+        this.dhKeyGen   = new DHKeyGen();
+
+        this.masterSecret = establishSharedKey();
+        this.masterCipher = new MasterCipher(this.masterSecret);
     }
 
-    private void establishSharedKey() {
+    private MasterSecret establishSharedKey() {
         Socket socket;
         int     length;
         byte[]  clientNameBytes;
@@ -61,20 +68,27 @@ public class ClientModel {
             dhKeyGen.generateSecret(pubKeyBytes);
             System.out.println("Shared Secret: " + new String(dhKeyGen.getSecret()));
 
-            aesSecretKey = new AESSecretKey(dhKeyGen.getSecret());
             keyEstablished = true;
+            return new MasterSecret(dhKeyGen.getSecret());
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.print("\033[31mServer not responding, may be down  \033[0m\n");
+            System.exit(1);
+            return null;
         }
     }
 
     public void sendMessage(String m) throws IOException {
-        m = clientName + ": "+ m;
+        try {
+            byte[] message;
+            m = String.format("[%s]: %s", clientName, m);
+            message = masterCipher.encrypt(m);
+            out.writeInt(message.length);
+            out.write(message);
+        } catch (IOException e) {
+            throw new IOException("Could not send message, OutputStream is closed.");
+        }
 
-        out.writeInt(m.getBytes().length);
-        out.write(m.getBytes());
-        System.out.println("Sending message.");
     }
 
     public DataInputStream getIn() throws NullPointerException {
@@ -93,4 +107,11 @@ public class ClientModel {
         return clientName;
     }
 
+    public MasterSecret getMasterSecret() {
+        return masterSecret;
+    }
+
+    public MasterCipher getMasterCipher() {
+        return masterCipher;
+    }
 }

@@ -1,9 +1,9 @@
 package ChatClient;
 
+import ChatClient.Crypto.AES.MasterCipher;
 import ChatClient.GUI.View;
 
 import java.io.*;
-import java.net.Socket;
 
 /**
  * Accepts sockets and handle them in individual threads.
@@ -16,11 +16,13 @@ public class ChatHandler extends Thread {
     private String          threadName = "Thread_" + (java.lang.Thread.activeCount());
     private DataInputStream in;
     private View            view;
+    private MasterCipher    masterCipher;
     /**
      * Instatiate the RequestHandler object.
      */
-    public ChatHandler(View view) {
-        this.view = view;
+    public ChatHandler(View view, MasterCipher masterCipher) {
+        this.view           = view;
+        this.masterCipher   = masterCipher;
     }
 
     public void setInputStream(DataInputStream in) {
@@ -42,10 +44,11 @@ public class ChatHandler extends Thread {
                 if (length > 0) {
                     message = new byte[length];
                     in.readFully(message, 0, message.length);
-                    view.showMessage("\n"+new String(message));
+                    view.showMessage("\n"+ masterCipher.decrypt(message));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
     }

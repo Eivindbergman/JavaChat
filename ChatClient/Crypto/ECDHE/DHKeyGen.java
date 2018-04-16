@@ -2,7 +2,6 @@ package ChatClient.Crypto.ECDHE;
 
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.ec.CustomNamedCurves;
-import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 
@@ -78,7 +77,6 @@ public class DHKeyGen {
      * @return byte[] of hexadecimal secret.
      */
     public byte[] getSecret() {
-        //return bytesToHex(this.secret).getBytes();
         return this.secret;
     }
 
@@ -91,7 +89,6 @@ public class DHKeyGen {
     }
 
     public byte[] getPrivateKey() {
-        //return bytesToHex(this.keyPair.getPrivate().getEncoded());
         return this.keyPair.getPrivate().getEncoded();
     }
 
