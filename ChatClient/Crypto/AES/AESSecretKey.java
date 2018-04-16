@@ -1,6 +1,5 @@
 package ChatClient.Crypto.AES;
 
-import ChatClient.Crypto.ECDHE.DHKeyGen;
 import ChatClient.Crypto.HKDF.HKDF;
 
 import javax.crypto.SecretKey;
@@ -26,7 +25,7 @@ public class AESSecretKey {
 
     private void generateKey() {
         hkdf = new HKDF();
-        System.out.println("SEED: " + new String(seed));
+        //System.out.println("SEED: " + new String(seed));
         byte[] OKM = hkdf.deriveSecret(seed, "".getBytes(), 32);
         //System.out.println("OKM KEY: " + new String(OKM));
         //System.out.println("OKM KEY HEX: " + new String(new DHKeyGen().bytesToHex(OKM)));
@@ -36,7 +35,7 @@ public class AESSecretKey {
             SecretKeySpec keySpec = new SecretKeySpec(OKM, algorithm);
             SecretKeyFactory kf = SecretKeyFactory.getInstance(algorithm);
             secretKey = kf.generateSecret(keySpec);
-            System.out.println("SEC KEY: " + new String(secretKey.getEncoded()));
+            //System.out.println("SEC KEY: " + new String(secretKey.getEncoded()));
             //System.out.println("SEC KEY HEX: " + new String(new DHKeyGen().bytesToHex(secretKey.getEncoded())));
         } catch (Exception e) {
             e.printStackTrace();
@@ -46,4 +45,5 @@ public class AESSecretKey {
     public SecretKey getSecretKey() {
         return secretKey;
     }
+
 }

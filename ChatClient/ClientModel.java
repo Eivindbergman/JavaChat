@@ -63,7 +63,6 @@ public class ClientModel {
 
             aesSecretKey = new AESSecretKey(dhKeyGen.getSecret());
             keyEstablished = true;
-            out.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -93,4 +92,5 @@ public class ClientModel {
     public String getClientName() {
         return clientName;
     }
+
 }
