@@ -2,13 +2,15 @@ package ChatClient.Crypto.ECDHE;
 
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.ec.CustomNamedCurves;
+import org.bouncycastle.jce.ECNamedCurveTable;
+import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
+import org.bouncycastle.jce.spec.ECPublicKeySpec;
 
 import javax.crypto.KeyAgreement;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Handles the client side of an Elliptic-Curve Diffie-Hellman key-exchange.
@@ -18,7 +20,7 @@ import java.security.spec.X509EncodedKeySpec;
  */
 public class DHKeyGen {
     private final       String              ALGORITHM       = "ECDH";
-    private final       String              paramSpec       = "curve25519";
+    private final       String              curve           = "curve25519";
     private final       String              PROVIDER        = "BC";
     private             KeyPair             keyPair;
     private             byte[]              secret;
@@ -28,6 +30,8 @@ public class DHKeyGen {
      */
     public DHKeyGen() {
         this.keyPair = generateKeys();
+        System.out.println(keyPair.getPrivate());
+        System.out.println(keyPair.getPublic());
     }
 
     /**
@@ -38,14 +42,17 @@ public class DHKeyGen {
     private KeyPair generateKeys() {
         try {
             Security.addProvider(new BouncyCastleProvider());
-
-            X9ECParameters ecP = CustomNamedCurves.getByName(paramSpec);
-            ECParameterSpec parameterSpec = new ECParameterSpec(ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(), ecP.getSeed());
+            X9ECParameters  ecParameters    = CustomNamedCurves.getByName(curve);
+            ECParameterSpec ecParameterSpec = new ECParameterSpec(  ecParameters.getCurve(),
+                                                                    ecParameters.getG(),
+                                                                    ecParameters.getN(),
+                                                                    ecParameters.getH(),
+                                                                    ecParameters.getSeed());
 
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM, PROVIDER);
-            keyPairGenerator.initialize(parameterSpec, new SecureRandom());
-
+            keyPairGenerator.initialize(ecParameterSpec, new SecureRandom());
             return keyPairGenerator.generateKeyPair();
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -53,28 +60,31 @@ public class DHKeyGen {
     }
 
     /**
-     * Generate the same secret at the server (Alice) with its public key along with the client's private key.
+     * Generate the same secret as the other client with their public key along with this client's private key.
      * Saves the shared secret as a byte[].
      * @param pubKey the other party's public key.
      */
     public void generateSecret(byte[] pubKey) {
         try {
-            X509EncodedKeySpec ks = new X509EncodedKeySpec(pubKey);
-            KeyFactory kf = KeyFactory.getInstance(ALGORITHM, PROVIDER);
+            ECParameterSpec parameterSpec   = ECNamedCurveTable.getParameterSpec(curve);
+            ECPublicKeySpec publicKeySpec   = new ECPublicKeySpec(parameterSpec.getCurve().decodePoint(pubKey), parameterSpec);
+
+            KeyFactory keyFactory      = KeyFactory.getInstance(ALGORITHM, PROVIDER);
 
             KeyAgreement keyAgreement = KeyAgreement.getInstance(ALGORITHM, PROVIDER);
-            keyAgreement.init(this.keyPair.getPrivate());
-            keyAgreement.doPhase(kf.generatePublic(ks), true);
+            keyAgreement.init(keyPair.getPrivate());
+            keyAgreement.doPhase(keyFactory.generatePublic(publicKeySpec), true);
 
-            this.secret = keyAgreement.generateSecret();
+            secret = keyAgreement.generateSecret();
+            System.out.println(bytesToHex(secret));
         } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Returns secret as a hex byte[].
-     * @return byte[] of hexadecimal secret.
+     * Returns secret.
+     * @return byte[].
      */
     public byte[] getSecret() {
         return this.secret;
@@ -85,11 +95,8 @@ public class DHKeyGen {
      * @return public key as a byte[].
      */
     public byte[] getPublicKey() {
-        return this.keyPair.getPublic().getEncoded();
-    }
-
-    public byte[] getPrivateKey() {
-        return this.keyPair.getPrivate().getEncoded();
+        ECPublicKey key = (ECPublicKey) this.keyPair.getPublic();
+        return key.getQ().getEncoded(true);
     }
 
     /**

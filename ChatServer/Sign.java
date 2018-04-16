@@ -55,7 +55,7 @@ public class Sign {
 
     public Signature createSignature() {
         try {
-            signature = Signature.getInstance("SHA1withRSA");
+            signature = Signature.getInstance(instance);
             signature.initSign(keyPair.getPrivate());
             //signature.update();
             return signature;

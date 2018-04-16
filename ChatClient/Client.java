@@ -1,14 +1,10 @@
 package ChatClient;
 
-import ChatClient.Crypto.AES.MasterCipher;
-import ChatClient.Crypto.AES.MasterSecret;
 import ChatClient.GUI.View;
-import Crypto.SecretKey;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.security.KeyException;
 
 /**
  * Main controller for Instant Messaging client.
@@ -52,6 +48,10 @@ public class Client {
         }
     }
 
+    /**
+     * Call method to send encrypted message to other party.
+     * @param m message to be encrypted and sent.
+     */
     private void sendMessage(String m) {
         try {
             model.sendMessage(m);
@@ -60,6 +60,9 @@ public class Client {
         }
     }
 
+    /**
+     * ActionListener for GUI.
+     */
     private class ChatListener implements ActionListener {
         String message;
         public void actionPerformed(ActionEvent e) {

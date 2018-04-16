@@ -3,18 +3,14 @@ package ChatClient;
 import ChatClient.Crypto.AES.MasterCipher;
 import ChatClient.Crypto.AES.MasterSecret;
 import ChatClient.Crypto.ECDHE.DHKeyGen;
-import ChatClient.Crypto.ECDHE.KeyGenException;
 
-import javax.crypto.SecretKey;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyException;
 
 /**
- * Description...
+ * Model part for the chatclient of the MVC.
  *
  * @author beej15
  * Created on 4/15/18
@@ -30,6 +26,11 @@ public class ClientModel {
     private     DataInputStream     in  = null;
     private     DataOutputStream    out = null;
 
+    /**
+     * Instatiate the model
+     * @param ip ip address of server.
+     * @param port port that the server is listening on.
+     */
     public ClientModel(String ip, int port) {
         this.ip         = ip;
         this.port       = port;
@@ -39,6 +40,10 @@ public class ClientModel {
         this.masterCipher = new MasterCipher(this.masterSecret);
     }
 
+    /**
+     * Connect to server and perform Elliptic Curve Diffie-Hellman key-exchange with another client.
+     * @return MasterSecret object holds the symmetric-key used for message encryption.
+     */
     private MasterSecret establishSharedKey() {
         Socket socket;
         int     length;
@@ -78,6 +83,11 @@ public class ClientModel {
         }
     }
 
+    /**
+     * Encrypt and send message to server, which will in turn send it to client.
+     * @param m message to be encrypted and sent.
+     * @throws IOException if the outputstream is closed, the program can not continue.
+     */
     public void sendMessage(String m) throws IOException {
         try {
             byte[] message;
@@ -91,26 +101,52 @@ public class ClientModel {
 
     }
 
+    /**
+     * Returns the InputStream which is connected to the server.
+     * @return DataInputStream
+     * @throws NullPointerException
+     */
     public DataInputStream getIn() throws NullPointerException {
         return in;
     }
 
+    /**
+     * Returns the OutputStream which is connected to the server.
+     * @return DataOutputStream
+     * @throws NullPointerException
+     */
     public DataOutputStream getOut() throws NullPointerException {
         return out;
     }
 
+    /**
+     * Checks whether or not a key has been established.
+     * @return boolean, true if key exists.
+     */
     public boolean isKeyEstablished() {
         return keyEstablished;
     }
 
+    /**
+     * Returns the name of the client.
+     * @return String.
+     */
     public String getClientName() {
         return clientName;
     }
 
+    /**
+     * Returns the object responsible for the symmetric key.
+     * @return MasterSecret, holds shared key.
+     */
     public MasterSecret getMasterSecret() {
         return masterSecret;
     }
 
+    /**
+     * Returns the object responsible for encryption and decryption, uses MasterSecret.
+     * @return MasterCipher
+     */
     public MasterCipher getMasterCipher() {
         return masterCipher;
     }
