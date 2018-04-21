@@ -51,8 +51,8 @@ public class DHKeyGen {
 
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM, PROVIDER);
             keyPairGenerator.initialize(ecParameterSpec, new SecureRandom());
-            return keyPairGenerator.generateKeyPair();
 
+            return keyPairGenerator.generateKeyPair();
         } catch (Exception e) {
             e.printStackTrace();
             return null;

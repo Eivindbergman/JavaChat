@@ -7,30 +7,37 @@ import java.security.InvalidKeyException;
 import java.util.Base64;
 
 /**
- * Description...
+ * This class is responsible for encrypting and decrypting data with AES-GCM-256
  *
  * @author beej15
  * Created on 4/16/18
  */
 public class MasterCipher {
-
-    //private final   int             AES_KEY_SIZE       = 128;
     private final   String          instance           = "AES/GCM/NoPadding";
     private final   String          provider           = "BC";
-    private         Cipher          encryptionCipher   = null;
-    private         Cipher          decryptionCipher   = null;
+    private         Cipher          encryptionCipher;
+    private         Cipher          decryptionCipher;
     private         MasterSecret    masterSecret;
 
+    /**
+     * Instatiates the MasterCipher object.
+     * @param secret secret AES key derived from ECDH secret
+     */
     public MasterCipher(MasterSecret secret) {
         try {
-            encryptionCipher    = Cipher.getInstance(instance, provider);
-            decryptionCipher    = Cipher.getInstance(instance, provider);
+            encryptionCipher    = Cipher.getInstance(instance, "BC");
+            decryptionCipher    = Cipher.getInstance(instance, "BC");
             masterSecret        = secret;
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Encrypts and encodes the plaintext.
+     * @param plainText message to be encrypted.
+     * @return encoded ciphertext.
+     */
     public byte[] encrypt(String plainText) {
         try {
             byte[] cipherText = encryptBytes(plainText.getBytes());
@@ -43,6 +50,11 @@ public class MasterCipher {
         return null;
     }
 
+    /**
+     * Decodes and decrypts the ciphertext.
+     * @param cipherText data to decrypt.
+     * @return decoded plaintext.
+     */
     public String decrypt(byte[] cipherText) {
         try {
             byte[] plainText = decode(cipherText);
@@ -54,6 +66,12 @@ public class MasterCipher {
         return null;
     }
 
+    /**
+     * Encrypts message with IV.
+     * @param plaintext
+     * @return Encrypted message concatenated with IV.
+     * @throws BadCipherParametersException
+     */
     private byte[] encryptBytes(byte[] plaintext) throws BadCipherParametersException {
         try {
             Cipher cipher = getEncryptionCipher(masterSecret.getSecretKey());
@@ -71,6 +89,12 @@ public class MasterCipher {
         }
     }
 
+    /**
+     * Decrypts the decoded message.
+     * @param ciphertext
+     * @return
+     * @throws BadCipherParametersException
+     */
     private byte[] decryptBytes(byte[] ciphertext) throws BadCipherParametersException {
         try {
             Cipher cipher = getDecryptionCipher(masterSecret.getSecretKey(), ciphertext);
