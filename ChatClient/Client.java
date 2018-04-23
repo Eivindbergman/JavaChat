@@ -26,8 +26,10 @@ public class Client {
     public Client(String ip, int port) {
         this.model = new ClientModel(ip, port);
         this.view = new View(model.getClientName());
+
         ChatHandler chatHandler = new ChatHandler(view, model.getMasterCipher());
         view.addChatListener(new ChatListener());
+
         if (model.isKeyEstablished()) {
             System.out.println("Starting chatHandler");
             chatHandler.setInputStream(model.getIn());

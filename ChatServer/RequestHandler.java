@@ -1,6 +1,5 @@
 package ChatServer;
 
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.Socket;
 
@@ -20,9 +19,9 @@ public class RequestHandler extends Thread {
     DataInputStream     bobIn;
     DataOutputStream    bobOut;
 
-            /**
-             * Instatiate the RequestHandler object.
-             */
+    /**
+     * Instatiate the RequestHandler object.
+     */
     RequestHandler() {}
 
     public void setAliceSocket(Socket aliceSocket) {
@@ -91,6 +90,9 @@ public class RequestHandler extends Thread {
                 bobPubKey;
         try {
 
+            //System.out.println((InetSocketAddress)aliceSocket.getRemoteSocketAddress());
+            //System.out.println((InetSocketAddress)bobSocket.getRemoteSocketAddress());
+
             byte[] alice = "Alice".getBytes();
             aliceOut.writeInt(alice.length);
             aliceOut.write(alice);
@@ -99,22 +101,17 @@ public class RequestHandler extends Thread {
             bobOut.writeInt(bob.length);
             bobOut.write(bob);
 
-            //aliceOut.writeInt(dhKeyGen.getPublicKey().length);
-            //aliceOut.write(dhKeyGen.getPublicKey());
-
             // Reading alice's public key.
             aliceLen = aliceIn.readInt();
             bobLen = bobIn.readInt();
             if (aliceLen > 0 && bobLen > 0) {
                 alicePubKey = new byte[aliceLen];
                 aliceIn.readFully(alicePubKey, 0, alicePubKey.length);
-                //System.out.println("Alice's pub key: " + new String(alicePubKey));
                 bobOut.writeInt(alicePubKey.length);
                 bobOut.write(alicePubKey);
 
                 bobPubKey = new byte[bobLen];
                 bobIn.readFully(bobPubKey, 0, bobPubKey.length);
-                //System.out.println("Bob's pub key: " + new String(bobPubKey));
                 aliceOut.writeInt(bobPubKey.length);
                 aliceOut.write(bobPubKey);
             }
