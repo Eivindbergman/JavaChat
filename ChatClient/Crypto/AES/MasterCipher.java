@@ -25,8 +25,8 @@ public class MasterCipher {
      */
     public MasterCipher(MasterSecret secret) {
         try {
-            encryptionCipher    = Cipher.getInstance(instance, "BC");
-            decryptionCipher    = Cipher.getInstance(instance, "BC");
+            encryptionCipher    = Cipher.getInstance(instance, provider);
+            decryptionCipher    = Cipher.getInstance(instance, provider);
             masterSecret        = secret;
         } catch (Exception e) {
             e.printStackTrace();
@@ -42,7 +42,6 @@ public class MasterCipher {
         try {
             byte[] cipherText = encryptBytes(plainText.getBytes());
             return encode(cipherText);
-            //cipherText = encryptBytes(plainText.getBytes());
         } catch (BadCipherParametersException e) {
             e.getMessage();
             System.exit(1);
@@ -68,14 +67,14 @@ public class MasterCipher {
 
     /**
      * Encrypts message with IV.
-     * @param plaintext
+     * @param plainText
      * @return Encrypted message concatenated with IV.
      * @throws BadCipherParametersException
      */
-    private byte[] encryptBytes(byte[] plaintext) throws BadCipherParametersException {
+    private byte[] encryptBytes(byte[] plainText) throws BadCipherParametersException {
         try {
             Cipher cipher = getEncryptionCipher(masterSecret.getSecretKey());
-            return getEncryptedBodyWithIV(cipher, plaintext);
+            return getEncryptedBodyWithIV(cipher, plainText);
 
         } catch (InvalidKeyException e) {
             e.printStackTrace();
@@ -90,15 +89,15 @@ public class MasterCipher {
     }
 
     /**
-     * Decrypts the decoded message.
-     * @param ciphertext
-     * @return
+     * Decrypts the decoded ciphertext.
+     * @param cipherText ciphertext to be decrypted.
+     * @return decrypted message.
      * @throws BadCipherParametersException
      */
-    private byte[] decryptBytes(byte[] ciphertext) throws BadCipherParametersException {
+    private byte[] decryptBytes(byte[] cipherText) throws BadCipherParametersException {
         try {
-            Cipher cipher = getDecryptionCipher(masterSecret.getSecretKey(), ciphertext);
-            return getDecryptedBodyAndIV(cipher, ciphertext);
+            Cipher cipher = getDecryptionCipher(masterSecret.getSecretKey(), cipherText);
+            return getDecryptedBodyAndIV(cipher, cipherText);
 
         } catch (InvalidKeyException e) {
             e.printStackTrace();
@@ -115,15 +114,33 @@ public class MasterCipher {
         }
     }
 
+    /**
+     * Encodes the encrypted ciphertext.
+     * @param text to be encoded
+     * @return encoded ciphertext
+     */
     private byte[] encode(byte[] text) {
         return Base64.getEncoder().encode(text);
 
     }
 
+    /**
+     * Decodes the ciphertext before decrypting.
+     * @param encodedBody to be decoded
+     * @return decoded ciphertext.
+     */
     private byte[] decode(byte[] encodedBody) {
         return Base64.getDecoder().decode(encodedBody);
     }
 
+    /**
+     * Adds the IV used to encrypt by concatenating it with the ciphertext.
+     * @param cipher encryptionCipher
+     * @param encrypted ciphertext
+     * @return Concatenated IV and ciphertext:
+     * @throws IllegalBlockSizeException
+     * @throws BadPaddingException
+     */
     private byte[] getEncryptedBodyWithIV(Cipher cipher, byte[] encrypted) throws IllegalBlockSizeException, BadPaddingException {
         byte[] cipherText   = cipher.doFinal(encrypted);
         byte[] iv           = cipher.getIV();
@@ -134,19 +151,40 @@ public class MasterCipher {
         return encryptedBody;
     }
 
+    /**
+     * Returns the decrypted message.
+     * @param cipher
+     * @param cipherText
+     * @return
+     * @throws IllegalBlockSizeException
+     * @throws BadPaddingException
+     */
     private byte[] getDecryptedBodyAndIV(Cipher cipher, byte[] cipherText) throws IllegalBlockSizeException, BadPaddingException {
         return cipher.doFinal(cipherText, cipher.getBlockSize(), cipherText.length - cipher.getBlockSize());
     }
 
+    /**
+     * The Cipher used for encrypting.
+     * @param key AES Key
+     * @return Cipher
+     * @throws InvalidKeyException
+     */
     private Cipher getEncryptionCipher(SecretKey key) throws InvalidKeyException {
         encryptionCipher.init(Cipher.ENCRYPT_MODE, key);
         return encryptionCipher;
     }
 
-    private Cipher getDecryptionCipher(SecretKey secretKey, byte[] ciphertext) throws InvalidKeyException, InvalidAlgorithmParameterException {
-        IvParameterSpec iv = new IvParameterSpec(ciphertext, 0, decryptionCipher.getBlockSize());
-        decryptionCipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
-
+    /**
+     * The Cipher used for decrypting.
+     * @param key AES Key
+     * @param cipherText data to be decrypted.
+     * @return Cipher
+     * @throws InvalidKeyException
+     * @throws InvalidAlgorithmParameterException
+     */
+    private Cipher getDecryptionCipher(SecretKey key, byte[] cipherText) throws InvalidKeyException, InvalidAlgorithmParameterException {
+        IvParameterSpec iv = new IvParameterSpec(cipherText, 0, decryptionCipher.getBlockSize());
+        decryptionCipher.init(Cipher.DECRYPT_MODE, key, iv);
         return decryptionCipher;
     }
 

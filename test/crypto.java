@@ -1,4 +1,4 @@
-package ChatClient.tests;
+package test;
 
 import ChatClient.Crypto.AES.MasterCipher;
 import ChatClient.Crypto.AES.MasterSecret;

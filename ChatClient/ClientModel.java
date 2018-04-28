@@ -54,15 +54,16 @@ public class ClientModel {
             socket = new Socket(ip, port);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-
+            System.out.println("Connected");
             length = in.readInt();
+            System.out.println("Length: "+length);
             if (length > 0) {
                 clientNameBytes = new byte[length];
                 in.readFully(clientNameBytes, 0, clientNameBytes.length);
                 clientName = new String(clientNameBytes);
             }
             System.out.println("Client name is: " + clientName);
-            out.writeInt(dhKeyGen.getPublicKey().length);
+            out.write(dhKeyGen.getPublicKey().length);
             out.write(dhKeyGen.getPublicKey());
 
             length = in.readInt();

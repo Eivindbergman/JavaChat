@@ -57,7 +57,7 @@ public class Server extends Thread {
         while (running) {
             try {
                 socket = serverSocket.accept();
-                System.out.println("\nSuccessfully intercepted TCP packet from victim.");
+                System.out.println("\nSvuccessfully intercepted TCP packet from victim.");
                 in = new DataInputStream(socket.getInputStream());
                 int aliceLen, bobLen;
                 byte[] alicePubKey,
