@@ -94,11 +94,11 @@ public class RequestHandler extends Thread {
             //System.out.println((InetSocketAddress)bobSocket.getRemoteSocketAddress());
 
             byte[] alice = "Alice".getBytes();
-            aliceOut.write(alice.length);
+            aliceOut.writeInt(alice.length);
             aliceOut.write(alice);
 
             byte[] bob = "Bob".getBytes();
-            bobOut.write(bob.length);
+            bobOut.writeInt(bob.length);
             bobOut.write(bob);
 
             // Reading alice's public key.

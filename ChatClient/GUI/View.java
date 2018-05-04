@@ -13,7 +13,7 @@ import java.awt.event.ActionListener;
 public class View extends JFrame{
 
     public  JTextField  textField;
-    public  JTextArea   textArea;
+    private  JTextArea   textArea;
 
     public View(String name) {
         super("JavaChat - " +name);

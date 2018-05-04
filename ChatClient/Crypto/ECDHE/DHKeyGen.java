@@ -30,8 +30,9 @@ public class DHKeyGen {
      */
     public DHKeyGen() {
         this.keyPair = generateKeys();
-        System.out.println(keyPair.getPrivate());
-        System.out.println(keyPair.getPublic());
+        //System.out.println(bytesToHex(keyPair.getPrivate().getEncoded()));
+        System.out.println(bytesToHex(this.getPublicKey()));
+        System.out.println(bytesToHex(this.getPublicKey()).length());
     }
 
     /**

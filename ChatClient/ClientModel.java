@@ -4,9 +4,7 @@ import ChatClient.Crypto.AES.MasterCipher;
 import ChatClient.Crypto.AES.MasterSecret;
 import ChatClient.Crypto.ECDHE.DHKeyGen;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -53,10 +51,9 @@ public class ClientModel {
         try {
             socket = new Socket(ip, port);
             in = new DataInputStream(socket.getInputStream());
+            //BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new DataOutputStream(socket.getOutputStream());
-            System.out.println("Connected");
             length = in.readInt();
-            System.out.println("Length: "+length);
             if (length > 0) {
                 clientNameBytes = new byte[length];
                 in.readFully(clientNameBytes, 0, clientNameBytes.length);
@@ -72,6 +69,7 @@ public class ClientModel {
                 in.readFully(pubKeyBytes, 0, pubKeyBytes.length);
             }
 
+            //pubKeyBytes = in.readLine().getBytes();
             dhKeyGen.generateSecret(pubKeyBytes);
             System.out.println("Shared Secret: " + new String(dhKeyGen.getSecret()));
 
@@ -109,7 +107,8 @@ public class ClientModel {
      * @throws NullPointerException
      */
     public DataInputStream getIn() throws NullPointerException {
-        return in;
+        //return in;
+        return null;
     }
 
     /**
